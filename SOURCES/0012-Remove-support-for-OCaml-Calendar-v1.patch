@@ -1,0 +1,203 @@
+From 61ded220af5511b6c164123e612e5650af8e49be Mon Sep 17 00:00:00 2001
+From: "Richard W.M. Jones" <rjones@redhat.com>
+Date: Mon, 27 Mar 2017 12:41:21 +0100
+Subject: [PATCH 12/23] Remove support for OCaml Calendar v1.
+
+Calendar v2 was released in 2008 (9 years ago!), thus remove support
+for v1.
+
+This was already broken by commit dc0e217390132f7e76a4d9c0a8a81a9556d19081
+so it likely didn't work anyway.
+---
+ MANIFEST                                  |  3 +-
+ configure.ac                              |  6 ---
+ po/POTFILES                               |  3 +-
+ src/.depend                               |  6 +--
+ src/Makefile.in                           |  7 +--
+ src/README                                |  8 ++--
+ src/{opt_calendar2.ml => opt_calendar.ml} |  0
+ src/opt_calendar1.ml                      | 56 -----------------------
+ 8 files changed, 9 insertions(+), 80 deletions(-)
+ rename src/{opt_calendar2.ml => opt_calendar.ml} (100%)
+ delete mode 100644 src/opt_calendar1.ml
+
+diff --git a/MANIFEST b/MANIFEST
+index 2cf377f..26e87b2 100644
+--- a/MANIFEST
++++ b/MANIFEST
+@@ -55,8 +55,7 @@ src/.depend
+ src/Makefile.in
+ src/README
+ src/main.ml
+-src/opt_calendar1.ml
+-src/opt_calendar2.ml
++src/opt_calendar.ml
+ src/opt_csv.ml
+ src/opt_xml.ml
+ src/top.ml
+diff --git a/configure.ac b/configure.ac
+index ad65465..c9c7e34 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -57,12 +57,7 @@ dnl Check for optional OCaml packages.
+ AC_CHECK_OCAML_PKG(gettext)
+ AC_CHECK_OCAML_PKG(xml-light)
+ AC_CHECK_OCAML_PKG(csv)
+-
+-dnl Need to check which version of calendar is installed.
+ AC_CHECK_OCAML_PKG(calendar)
+-if test "x$OCAML_PKG_calendar" != "xno"; then
+-    AC_CHECK_OCAML_MODULE(is_calendar2,calendar,[CalendarLib.Date],[+$OCAML_PKG_calendar])
+-fi
+ 
+ AC_SUBST(OCAML_PKG_unix)
+ AC_SUBST(OCAML_PKG_extlib)
+@@ -71,7 +66,6 @@ AC_SUBST(OCAML_PKG_gettext)
+ AC_SUBST(OCAML_PKG_xml_light)
+ AC_SUBST(OCAML_PKG_csv)
+ AC_SUBST(OCAML_PKG_calendar)
+-AC_SUBST(is_calendar2)
+ 
+ dnl Check for optional perldoc (for building manual pages).
+ AC_CHECK_PROG(HAVE_PERLDOC,perldoc,perldoc)
+diff --git a/po/POTFILES b/po/POTFILES
+index 70d62d5..b826a2a 100644
+--- a/po/POTFILES
++++ b/po/POTFILES
+@@ -1,6 +1,5 @@
+ ../src/main.ml
+-../src/opt_calendar1.ml
+-../src/opt_calendar2.ml
++../src/opt_calendar.ml
+ ../src/opt_csv.ml
+ ../src/opt_gettext.ml
+ ../src/opt_xml.ml
+diff --git a/src/.depend b/src/.depend
+index 5325c54..f487c18 100644
+--- a/src/.depend
++++ b/src/.depend
+@@ -1,9 +1,7 @@
+ main.cmo: top.cmi opt_gettext.cmo
+ main.cmx: top.cmx opt_gettext.cmx
+-opt_calendar1.cmo: top.cmi opt_gettext.cmo
+-opt_calendar1.cmx: top.cmx opt_gettext.cmx
+-opt_calendar2.cmo: top.cmi opt_gettext.cmo
+-opt_calendar2.cmx: top.cmx opt_gettext.cmx
++opt_calendar.cmo: top.cmi opt_gettext.cmo
++opt_calendar.cmx: top.cmx opt_gettext.cmx
+ opt_csv.cmo: top.cmi opt_gettext.cmo
+ opt_csv.cmx: top.cmx opt_gettext.cmx
+ opt_gettext.cmo:
+diff --git a/src/Makefile.in b/src/Makefile.in
+index d744fd7..ae896cb 100644
+--- a/src/Makefile.in
++++ b/src/Makefile.in
+@@ -52,13 +52,8 @@ OBJS		+= opt_csv.cmo
+ OCAMLCPACKAGES	+= -package csv
+ endif
+ ifneq ($(OCAML_PKG_calendar),no)
+-ifeq ($(is_calendar2),no)
+-OBJS		+= opt_calendar1.cmo
++OBJS		+= opt_calendar.cmo
+ OCAMLCPACKAGES	+= -package calendar
+-else
+-OBJS		+= opt_calendar2.cmo
+-OCAMLCPACKAGES	+= -package calendar
+-endif
+ endif
+ OBJS		+= main.cmo
+ 
+diff --git a/src/README b/src/README
+index 47382a5..8aa2348 100644
+--- a/src/README
++++ b/src/README
+@@ -40,16 +40,16 @@ The code is structured into these files:
+     Any code which needs the optional ocaml-csv library goes
+     in here.  This implements the --csv command line option.
+ 
+-  opt_calendar1.ml, opt_calendar2.ml
++  opt_calendar.ml
+ 
+     Any code which needs the optional ocaml-calendar library
+-    (v1 or v2) goes in here.  This implements the --end-time
+-    command line option.
++    (v2) goes in here.  This implements the --end-time command
++    line option.
+ 
+   main.ml
+ 
+     This is just a small bit of code to glue the modules together
+-    Top + Opt_xml? + Opt_csv? + Opt_calendar{1,2}?
++    Top + Opt_xml? + Opt_csv? + Opt_calendar?
+ 
+ The man-page is generated from the single file:
+ 
+diff --git a/src/opt_calendar2.ml b/src/opt_calendar.ml
+similarity index 100%
+rename from src/opt_calendar2.ml
+rename to src/opt_calendar.ml
+diff --git a/src/opt_calendar1.ml b/src/opt_calendar1.ml
+deleted file mode 100644
+index 2c459fe..0000000
+--- a/src/opt_calendar1.ml
++++ /dev/null
+@@ -1,56 +0,0 @@
+-(* 'top'-like tool for libvirt domains.
+-   (C) Copyright 2007-2009 Richard W.M. Jones, Red Hat Inc.
+-   http://libvirt.org/
+-
+-   This program is free software; you can redistribute it and/or modify
+-   it under the terms of the GNU General Public License as published by
+-   the Free Software Foundation; either version 2 of the License, or
+-   (at your option) any later version.
+-
+-   This program is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-   GNU General Public License for more details.
+-
+-   You should have received a copy of the GNU General Public License
+-   along with this program; if not, write to the Free Software
+-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-
+-   This file contains all code which requires ocaml-calendar < 2.0
+-*)
+-
+-open Printf
+-open ExtString
+-
+-open Opt_gettext.Gettext ;;
+-
+-Top.parse_date_time :=
+-fun time ->
+-  let cal : Calendar.t =
+-    if String.starts_with time "+" then ( (* +something *)
+-      let period = String.sub time 1 (String.length time - 1) in
+-      let period =
+-	if String.contains period ':' then ( (* +HH:MM:SS *)
+-	  let t = Printer.TimePrinter.from_string period in
+-	  let hh = Time.hour t and mm = Time.minute t and ss = Time.second t in
+-	  Calendar.Period.make 0 0 0 hh mm ss
+-	) else				(* +seconds *)
+-	  Calendar.Period.second (int_of_string period) in
+-      (* Add it as an offset from the current time. *)
+-      Calendar.add (Calendar.now ()) period
+-    ) else (
+-      if String.contains time '-' then	(* YYYY-MM-DD HH:MM:SS *)
+-	Printer.CalendarPrinter.from_string time
+-      else (				(* HH:MM:SS *)
+-	let time = Printer.TimePrinter.from_string time in
+-	Calendar.create (Date.today ()) time
+-      )
+-    ) in
+-
+-  eprintf "end time: %s\n" (Printer.CalendarPrinter.to_string cal);
+-
+-  (* Convert to a time_t.  Note that we compare this against
+-   * Unix.gettimeofday in the main module, so this must be returned as
+-   * plain seconds from 1970 with no timezone adjustment.  (RHBZ#637964)
+-   *)
+-  Calendar.to_unixfloat cal
+-- 
+2.31.1
+

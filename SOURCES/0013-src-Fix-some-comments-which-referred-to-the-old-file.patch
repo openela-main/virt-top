@@ -1,0 +1,76 @@
+From b7a80d457904a3d677a14b7641b957c9760c03f9 Mon Sep 17 00:00:00 2001
+From: "Richard W.M. Jones" <rjones@redhat.com>
+Date: Mon, 27 Mar 2017 13:06:18 +0100
+Subject: [PATCH 13/23] src: Fix some comments which referred to the old
+ filenames.
+
+Fixes commit b7c3ef13cbd9c9cd49005a32ffb70faf6f5bbe8c.
+---
+ src/top.ml  | 8 ++++----
+ src/top.mli | 6 +++---
+ 2 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/src/top.ml b/src/top.ml
+index 38658c6..f50e6a8 100644
+--- a/src/top.ml
++++ b/src/top.ml
+@@ -30,13 +30,13 @@ module N = Libvirt.Network
+ 
+ let rcfile = ".virt-toprc"
+ 
+-(* Hook for XML support (see virt_top_xml.ml). *)
++(* Hook for XML support (see [opt_xml.ml]). *)
+ let parse_device_xml : (int -> [>`R] D.t -> string list * string list) ref =
+   ref (
+     fun _ _ -> [], []
+   )
+ 
+-(* Hooks for CSV support (see virt_top_csv.ml). *)
++(* Hooks for CSV support (see [opt_csv.ml]). *)
+ let csv_start : (string -> unit) ref =
+   ref (
+     fun _ -> failwith (s_"virt-top was compiled without support for CSV files")
+@@ -46,7 +46,7 @@ let csv_write : (string list -> unit) ref =
+     fun _ -> ()
+   )
+ 
+-(* Hook for calendar support (see virt_top_calendar.ml). *)
++(* Hook for calendar support (see [opt_calendar.ml]). *)
+ let parse_date_time : (string -> float) ref =
+   ref (
+     fun _ ->
+@@ -345,7 +345,7 @@ OPTIONS" in
+ 
+   (* This tuple of static information is called 'setup' in other parts
+    * of this program, and is passed to other functions such as redraw and
+-   * main_loop.  See virt_top_main.ml.
++   * main_loop.  See [main.ml].
+    *)
+   (conn,
+    !batch_mode, !script_mode, !csv_enabled, !stream_mode, (* immutable modes *)
+diff --git a/src/top.mli b/src/top.mli
+index 3ad0718..b0953dd 100644
+--- a/src/top.mli
++++ b/src/top.mli
+@@ -17,15 +17,15 @@
+    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *)
+ 
+-(* Hook for virt_top_xml to override (if present). *)
++(* Hook for [Opt_xml] to override (if present). *)
+ val parse_device_xml :
+   (int -> [ `R ] Libvirt.Domain.t -> string list * string list) ref
+ 
+-(* Hooks for virt_top_csv to override (if present). *)
++(* Hooks for [Opt_csv] to override (if present). *)
+ val csv_start : (string -> unit) ref
+ val csv_write : (string list -> unit) ref
+ 
+-(* Hook for virt_top_calendar to override (if present). *)
++(* Hook for [Opt_calendar] to override (if present). *)
+ val parse_date_time : (string -> float) ref
+ 
+ type setup =
+-- 
+2.31.1
+

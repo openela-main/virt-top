@@ -1,0 +1,32 @@
+From 2afed7fe878bee73fabab0b1f43aac269bdb3b6a Mon Sep 17 00:00:00 2001
+From: "Richard W.M. Jones" <rjones@redhat.com>
+Date: Sat, 18 Nov 2017 12:01:49 +0000
+Subject: [PATCH 20/23] Link with -fPIC runtime.
+
+---
+ src/Makefile.in | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/src/Makefile.in b/src/Makefile.in
+index 6a13bef..03c6362 100644
+--- a/src/Makefile.in
++++ b/src/Makefile.in
+@@ -84,11 +84,14 @@ all: $(BYTE_TARGETS)
+ opt: $(OPT_TARGETS)
+ 
+ virt-top: $(OBJS)
+-	ocamlfind ocamlc $(OCAMLCPACKAGES) $(OCAMLCFLAGS) $(OCAMLCLIBS) -o $@ $^
++	ocamlfind ocamlc $(OCAMLCPACKAGES) $(OCAMLCFLAGS) $(OCAMLCLIBS) \
++	  -runtime-variant _pic \
++	  -o $@ $^
+ 
+ virt-top.opt: $(XOBJS)
+ 	ocamlfind ocamlopt \
+ 	  $(OCAMLOPTPACKAGES) $(OCAMLOPTFLAGS) $(OCAMLOPTLIBS) \
++	  -runtime-variant _pic \
+ 	  -o $@ $^
+ 
+ # Manual page.
+-- 
+2.31.1
+
