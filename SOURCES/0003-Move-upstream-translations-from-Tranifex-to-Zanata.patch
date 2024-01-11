@@ -1,0 +1,167 @@
+From e2160973526c817bac050f3d7207d5c291b16177 Mon Sep 17 00:00:00 2001
+From: "Richard W.M. Jones" <rjones@redhat.com>
+Date: Sat, 21 Feb 2015 17:27:59 +0000
+Subject: [PATCH 03/23] Move upstream translations from Tranifex to Zanata.
+
+This is at the request of the Fedora localization team.
+For further information see:
+
+https://www.redhat.com/archives/libguestfs/2015-February/msg00168.html
+---
+ po/zanata-pull.sh |  30 +++++++++++++
+ po/zanata.xml     | 106 ++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 136 insertions(+)
+ create mode 100755 po/zanata-pull.sh
+ create mode 100644 po/zanata.xml
+
+diff --git a/po/zanata-pull.sh b/po/zanata-pull.sh
+new file mode 100755
+index 0000000..d051b7a
+--- /dev/null
++++ b/po/zanata-pull.sh
+@@ -0,0 +1,30 @@
++#!/bin/bash -
++# Pull translations from Zanata.
++# Copyright (C) 2011-2015 Red Hat Inc.
++#
++# This program is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++#
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write to the Free Software
++# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
++
++set -e
++
++echo zanata po pull
++zanata po pull
++
++# Remove PO files that have no translations in them.
++for f in *.po; do
++  if ! grep -q '^msgstr "[^"]' $f; then
++    echo rm $f
++    rm $f
++  fi
++done
+diff --git a/po/zanata.xml b/po/zanata.xml
+new file mode 100644
+index 0000000..64810f9
+--- /dev/null
++++ b/po/zanata.xml
+@@ -0,0 +1,106 @@
++<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
++<config xmlns="http://zanata.org/namespace/config/">
++  <url>https://fedora.zanata.org</url>
++  <project>virt-top</project>
++  <project-version>master</project-version>
++  <project-type>gettext</project-type>
++
++  <locales>
++    <locale>sq</locale>
++    <locale>ar</locale>
++    <locale>as</locale>
++    <locale>ast</locale>
++    <locale>bal</locale>
++    <locale>eu</locale>
++    <locale>bn</locale>
++    <locale>bn-IN</locale>
++    <locale>brx</locale>
++    <locale>bs</locale>
++    <locale>br</locale>
++    <locale>bg</locale>
++    <locale>ca</locale>
++    <locale>zh-CN</locale>
++    <locale>zh-HK</locale>
++    <locale>zh-TW</locale>
++    <locale>kw</locale>
++    <locale>kw-GB</locale>
++    <locale>cs</locale>
++    <locale>da</locale>
++    <locale>nl</locale>
++    <locale>en-GB</locale>
++    <locale>eo</locale>
++    <locale>et</locale>
++    <locale>fi</locale>
++    <locale>fr</locale>
++    <locale>gl</locale>
++    <locale>ka</locale>
++    <locale>de</locale>
++    <locale>el</locale>
++    <locale>gu</locale>
++    <locale>he</locale>
++    <locale>hi</locale>
++    <locale>hu</locale>
++    <locale>is</locale>
++    <locale>id</locale>
++    <locale>ia</locale>
++    <locale>it</locale>
++    <locale>ja</locale>
++    <locale>kn</locale>
++    <locale>kk</locale>
++    <locale>km</locale>
++    <locale>ky</locale>
++    <locale>ko</locale>
++    <locale>lt</locale>
++    <locale>nds</locale>
++    <locale>mk</locale>
++    <locale>mai</locale>
++    <locale>ms</locale>
++    <locale>ml</locale>
++    <locale>mr</locale>
++    <locale>mn</locale>
++    <locale>ne</locale>
++    <locale>nb</locale>
++    <locale>nn</locale>
++    <locale>or</locale>
++    <locale>pa</locale>
++    <locale>fa</locale>
++    <locale>pl</locale>
++    <locale>pt</locale>
++    <locale>pt-BR</locale>
++    <locale>ro</locale>
++    <locale>ru</locale>
++    <locale>sr</locale>
++    <locale>sr@latin</locale>
++    <locale>si</locale>
++    <locale>sk</locale>
++    <locale>sl</locale>
++    <locale>es</locale>
++    <locale>sv</locale>
++    <locale>tg</locale>
++    <locale>ta</locale>
++    <locale>te</locale>
++    <locale>bo</locale>
++    <locale>tr</locale>
++    <locale>uk</locale>
++    <locale>ur</locale>
++    <locale>wba</locale>
++    <locale>cy</locale>
++    <locale>lv</locale>
++    <locale>kw@uccor</locale>
++    <locale>kw@kkcor</locale>
++    <locale>af</locale>
++    <locale>am</locale>
++    <locale>be</locale>
++    <locale>hr</locale>
++    <locale>de-CH</locale>
++    <locale>th</locale>
++    <locale>vi</locale>
++    <locale>zu</locale>
++    <locale>ilo</locale>
++    <locale>nso</locale>
++    <locale>tw</locale>
++    <locale>yo</locale>
++    <locale>anp</locale>
++  </locales>
++
++</config>
+-- 
+2.31.1
+

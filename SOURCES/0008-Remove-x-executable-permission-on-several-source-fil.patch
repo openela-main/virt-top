@@ -1,0 +1,48 @@
+From 0d06cf9912262a28088377fb7b17682709752c6c Mon Sep 17 00:00:00 2001
+From: "Richard W.M. Jones" <rjones@redhat.com>
+Date: Mon, 27 Mar 2017 12:25:19 +0100
+Subject: [PATCH 08/23] Remove +x (executable) permission on several source
+ files.
+
+Not sure why it was there, but it was incorrect.
+---
+ src/Makefile.in      | 0
+ src/README           | 0
+ src/opt_calendar1.ml | 0
+ src/opt_calendar2.ml | 0
+ src/top.mli          | 0
+ src/utils.mli        | 0
+ src/virt-top.pod     | 0
+ 7 files changed, 0 insertions(+), 0 deletions(-)
+ mode change 100755 => 100644 src/Makefile.in
+ mode change 100755 => 100644 src/README
+ mode change 100755 => 100644 src/opt_calendar1.ml
+ mode change 100755 => 100644 src/opt_calendar2.ml
+ mode change 100755 => 100644 src/top.mli
+ mode change 100755 => 100644 src/utils.mli
+ mode change 100755 => 100644 src/virt-top.pod
+
+diff --git a/src/Makefile.in b/src/Makefile.in
+old mode 100755
+new mode 100644
+diff --git a/src/README b/src/README
+old mode 100755
+new mode 100644
+diff --git a/src/opt_calendar1.ml b/src/opt_calendar1.ml
+old mode 100755
+new mode 100644
+diff --git a/src/opt_calendar2.ml b/src/opt_calendar2.ml
+old mode 100755
+new mode 100644
+diff --git a/src/top.mli b/src/top.mli
+old mode 100755
+new mode 100644
+diff --git a/src/utils.mli b/src/utils.mli
+old mode 100755
+new mode 100644
+diff --git a/src/virt-top.pod b/src/virt-top.pod
+old mode 100755
+new mode 100644
+-- 
+2.31.1
+

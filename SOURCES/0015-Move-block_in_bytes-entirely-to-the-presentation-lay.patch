@@ -1,0 +1,211 @@
+From 10660e29ea19a0e290e28afe0425f63afd0abd58 Mon Sep 17 00:00:00 2001
+From: "Richard W.M. Jones" <rjones@redhat.com>
+Date: Mon, 27 Mar 2017 21:22:52 +0100
+Subject: [PATCH 15/23] Move block_in_bytes entirely to the presentation layer.
+
+Simplifies and updates commit dbef8dd3bf00417e75a12c851b053e49c9e1a79e.
+---
+ src/collect.ml       | 19 +++----------------
+ src/collect.mli      |  6 +-----
+ src/csv_output.ml    | 14 ++++++++++----
+ src/csv_output.mli   |  2 +-
+ src/redraw.ml        | 10 +++++++---
+ src/stream_output.ml | 14 ++++++++++----
+ src/top.ml           |  4 ++--
+ 7 files changed, 34 insertions(+), 35 deletions(-)
+
+diff --git a/src/collect.ml b/src/collect.ml
+index f856067..448ce8c 100644
+--- a/src/collect.ml
++++ b/src/collect.ml
+@@ -57,12 +57,8 @@ and rd_active = {
+   (* The following are since the last slice, or None if cannot be calc'd: *)
+   rd_block_rd_reqs : int64 option;      (* Number of block device read rqs. *)
+   rd_block_wr_reqs : int64 option;      (* Number of block device write rqs. *)
+-  rd_block_rd_bytes : int64 option;   (* Number of bytes block device read *)
+-  rd_block_wr_bytes : int64 option;   (* Number of bytes block device write *)
+-  (* _info fields includes the number considering --block_in_bytes option *)
+-  rd_block_rd_info : int64 option;    (* Block device read info for user *)
+-  rd_block_wr_info : int64 option;    (* Block device read info for user *)
+-
++  rd_block_rd_bytes : int64 option;     (* Number of bytes block device read *)
++  rd_block_wr_bytes : int64 option;     (* Number of bytes block device write *)
+   rd_net_rx_bytes : int64 option;	(* Number of bytes received. *)
+   rd_net_tx_bytes : int64 option;	(* Number of bytes transmitted. *)
+ }
+@@ -114,7 +110,7 @@ let last_pcpu_usages = Hashtbl.create 13
+ let clear_pcpu_display_data () =
+   Hashtbl.clear last_pcpu_usages
+ 
+-let collect (conn, _, _, _, _, node_info, _, _) block_in_bytes =
++let collect (conn, _, _, _, _, node_info, _, _) =
+   (* Number of physical CPUs (some may be disabled). *)
+   let nr_pcpus = C.maxcpus_of_node_info node_info in
+ 
+@@ -178,7 +174,6 @@ let collect (conn, _, _, _, _, node_info, _, _) block_in_bytes =
+                       rd_mem_bytes = 0L; rd_mem_percent = 0L;
+ 		      rd_block_rd_reqs = None; rd_block_wr_reqs = None;
+                       rd_block_rd_bytes = None; rd_block_wr_bytes = None;
+-                      rd_block_rd_info = None; rd_block_wr_info = None;
+ 		      rd_net_rx_bytes = None; rd_net_tx_bytes = None;
+ 		    })
+ 	  with
+@@ -256,14 +251,6 @@ let collect (conn, _, _, _, _, node_info, _, _) block_in_bytes =
+                     rd_block_rd_bytes = Some read_bytes;
+                     rd_block_wr_bytes = Some write_bytes;
+          } in
+-         let rd = { rd with
+-                    rd_block_rd_info =
+-                      if block_in_bytes then
+-                        rd.rd_block_rd_bytes else rd.rd_block_rd_reqs;
+-                    rd_block_wr_info =
+-                      if block_in_bytes then
+-                        rd.rd_block_wr_bytes else rd.rd_block_wr_reqs;
+-         } in
+ 	 name, Active rd
+       (* For all other domains we can't calculate it, so leave as None. *)
+       | rd -> rd
+diff --git a/src/collect.mli b/src/collect.mli
+index 440859b..9ad3dcb 100644
+--- a/src/collect.mli
++++ b/src/collect.mli
+@@ -48,10 +48,6 @@ and rd_active = {
+   rd_block_wr_reqs : int64 option;      (* Number of block device write rqs. *)
+   rd_block_rd_bytes : int64 option;     (* Number of bytes block device read *)
+   rd_block_wr_bytes : int64 option;     (* Number of bytes block device write *)
+-  (* _info fields includes the number considering --block_in_bytes option *)
+-  rd_block_rd_info : int64 option;      (* Block device read info for user *)
+-  rd_block_wr_info : int64 option;      (* Block device read info for user *)
+-
+   rd_net_rx_bytes : int64 option;	(* Number of bytes received. *)
+   rd_net_tx_bytes : int64 option;	(* Number of bytes transmitted. *)
+ }
+@@ -75,7 +71,7 @@ type pcpu_stats = {
+   rd_pcpu_pcpus_cpu_time : float array
+ }
+ 
+-val collect : Types.setup -> bool -> stats
++val collect : Types.setup -> stats
+ (** Collect statistics. *)
+ 
+ val collect_pcpu : stats -> pcpu_stats
+diff --git a/src/csv_output.ml b/src/csv_output.ml
+index 9496ca8..f23d673 100644
+--- a/src/csv_output.ml
++++ b/src/csv_output.ml
+@@ -56,6 +56,7 @@ let write_csv_header (csv_cpu, csv_mem, csv_block, csv_net) block_in_bytes =
+ (* Write summary data to CSV file. *)
+ let append_csv (_, _, _, _, _, node_info, hostname, _) (* setup *)
+                (csv_cpu, csv_mem, csv_block, csv_net)
++               block_in_bytes
+                { rd_doms = doms;
+                  rd_printable_time = printable_time;
+                  rd_nr_pcpus = nr_pcpus; rd_total_cpu = total_cpu;
+@@ -104,10 +105,15 @@ let append_csv (_, _, _, _, _, node_info, hostname, _) (* setup *)
+         (if csv_mem then [
+             Int64.to_string rd.rd_mem_bytes; Int64.to_string rd.rd_mem_percent
+          ] else []) @
+-	(if csv_block then [
+-	   string_of_int64_option rd.rd_block_rd_info;
+-	   string_of_int64_option rd.rd_block_wr_info;
+-	 ] else []) @
++	(if csv_block then
++           if block_in_bytes then [
++	     string_of_int64_option rd.rd_block_rd_bytes;
++	     string_of_int64_option rd.rd_block_wr_bytes;
++	   ] else [
++	     string_of_int64_option rd.rd_block_rd_reqs;
++	     string_of_int64_option rd.rd_block_wr_reqs;
++           ]
++         else []) @
+ 	(if csv_net then [
+ 	   string_of_int64_option rd.rd_net_rx_bytes;
+ 	   string_of_int64_option rd.rd_net_tx_bytes;
+diff --git a/src/csv_output.mli b/src/csv_output.mli
+index d5eab0f..4064be5 100644
+--- a/src/csv_output.mli
++++ b/src/csv_output.mli
+@@ -24,4 +24,4 @@ val csv_write : (string list -> unit) ref
+ 
+ val write_csv_header : bool * bool * bool * bool -> bool -> unit
+ 
+-val append_csv : Types.setup -> bool * bool * bool * bool -> Collect.stats -> unit
++val append_csv : Types.setup -> bool * bool * bool * bool -> bool -> Collect.stats -> unit
+diff --git a/src/redraw.ml b/src/redraw.ml
+index 9ce889b..0403158 100644
+--- a/src/redraw.ml
++++ b/src/redraw.ml
+@@ -155,8 +155,12 @@ let redraw display_mode sort_order
+ 	| (name, Active rd) :: doms ->
+ 	   if lineno < lines then (
+ 	     let state = show_state rd.rd_info.D.state in
+-	     let rd_req = Show.int64_option rd.rd_block_rd_info in
+-	     let wr_req = Show.int64_option rd.rd_block_wr_info in
++	     let rd_info =
++               if block_in_bytes then Show.int64_option rd.rd_block_rd_bytes
++               else Show.int64_option rd.rd_block_rd_reqs in
++	     let wr_info =
++               if block_in_bytes then Show.int64_option rd.rd_block_wr_bytes
++               else Show.int64_option rd.rd_block_wr_reqs in
+ 	     let rx_bytes = Show.int64_option rd.rd_net_rx_bytes in
+ 	     let tx_bytes = Show.int64_option rd.rd_net_tx_bytes in
+ 	     let percent_cpu = Show.percent rd.rd_percent_cpu in
+@@ -166,7 +170,7 @@ let redraw display_mode sort_order
+ 
+ 	     let line =
+                sprintf "%5d %c %s %s %s %s %s %s %s %s"
+-		       rd.rd_domid state rd_req wr_req rx_bytes tx_bytes
++		       rd.rd_domid state rd_info wr_info rx_bytes tx_bytes
+ 		       percent_cpu percent_mem time name in
+ 	     let line = pad cols line in
+ 	     mvaddstr lineno 0 line;
+diff --git a/src/stream_output.ml b/src/stream_output.ml
+index bf7b114..c3af99b 100644
+--- a/src/stream_output.ml
++++ b/src/stream_output.ml
+@@ -59,10 +59,16 @@ let append_stream (_, _, _, _, _, node_info, hostname, _) (* setup *)
+   let dump_domain = fun name rd
+   -> begin
+     let state = Screen.show_state rd.rd_info.D.state in
+-         let rd_req = if rd.rd_block_rd_info = None then "   0"
+-                      else Show.int64_option rd.rd_block_rd_info in
+-         let wr_req = if rd.rd_block_wr_info = None then "   0"
+-                      else Show.int64_option rd.rd_block_wr_info in
++         let rd_req =
++           if rd.rd_block_rd_reqs = None then "   0"
++           else
++             if block_in_bytes then Show.int64_option rd.rd_block_rd_bytes
++             else Show.int64_option rd.rd_block_rd_reqs in
++         let wr_req =
++           if rd.rd_block_wr_reqs = None then "   0"
++           else
++             if block_in_bytes then Show.int64_option rd.rd_block_wr_bytes
++             else Show.int64_option rd.rd_block_wr_reqs in
+     let rx_bytes = if rd.rd_net_rx_bytes = None then "   0"
+     else Show.int64_option rd.rd_net_rx_bytes in
+     let tx_bytes = if rd.rd_net_tx_bytes = None then "   0"
+diff --git a/src/top.ml b/src/top.ml
+index 204f3b6..e2a93d6 100644
+--- a/src/top.ml
++++ b/src/top.ml
+@@ -319,7 +319,7 @@ let rec main_loop ((_, batch_mode, script_mode, csv_enabled, stream_mode, _, _,
+ 
+   while not !quit do
+     (* Collect stats. *)
+-    let state = collect setup !block_in_bytes in
++    let state = collect setup in
+     let pcpu_display =
+       if !display_mode = PCPUDisplay then Some (collect_pcpu state)
+       else None in
+@@ -331,7 +331,7 @@ let rec main_loop ((_, batch_mode, script_mode, csv_enabled, stream_mode, _, _,
+ 
+     (* Update CSV file. *)
+     if csv_enabled then
+-      Csv_output.append_csv setup csv_flags state;
++      Csv_output.append_csv setup csv_flags !block_in_bytes state;
+ 
+     (* Append to stream output file. *)
+     if stream_mode then
+-- 
+2.31.1
+

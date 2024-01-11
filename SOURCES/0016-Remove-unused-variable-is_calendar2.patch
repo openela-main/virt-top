@@ -1,0 +1,25 @@
+From 9af3b4d4667bf96d8c36e440ea11c106ae53a43f Mon Sep 17 00:00:00 2001
+From: "Richard W.M. Jones" <rjones@redhat.com>
+Date: Tue, 28 Mar 2017 13:09:54 +0100
+Subject: [PATCH 16/23] Remove unused variable is_calendar2.
+
+Fixes commit effd1ec5897a2cac6e897ae7bce72f6b1e617b90.
+---
+ src/Makefile.in | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/src/Makefile.in b/src/Makefile.in
+index 64f431e..6a13bef 100644
+--- a/src/Makefile.in
++++ b/src/Makefile.in
+@@ -29,7 +29,6 @@ OCAML_PKG_curses    = @OCAML_PKG_curses@
+ OCAML_PKG_xml_light = @OCAML_PKG_xml_light@
+ OCAML_PKG_csv	    = @OCAML_PKG_csv@
+ OCAML_PKG_calendar  = @OCAML_PKG_calendar@
+-is_calendar2	    = @is_calendar2@
+ OCAML_PKG_gettext   = @OCAML_PKG_gettext@
+ 
+ OCAMLCPACKAGES	:= -package unix,extlib,curses,str,libvirt
+-- 
+2.31.1
+

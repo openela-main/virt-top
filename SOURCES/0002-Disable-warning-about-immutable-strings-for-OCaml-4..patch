@@ -1,0 +1,50 @@
+From 5790c2e4033fd81ef66331fe0f768989c10df6b2 Mon Sep 17 00:00:00 2001
+From: "Richard W.M. Jones" <rjones@redhat.com>
+Date: Sat, 2 Aug 2014 17:37:21 +0100
+Subject: [PATCH 02/23] Disable warning about immutable strings (for OCaml
+ 4.02).
+
+---
+ Makefile.in          | 2 +-
+ virt-top/Makefile.in | 6 +++---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/Makefile.in b/Makefile.in
+index 32e0b66..b310e58 100644
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -1,5 +1,5 @@
+ # virt-top
+-# Copyright (C) 2007-2009 Red Hat Inc., Richard W.M. Jones
++# Copyright (C) 2007-2014 Red Hat Inc., Richard W.M. Jones
+ #
+ # This library is free software; you can redistribute it and/or
+ # modify it under the terms of the GNU Lesser General Public
+diff --git a/virt-top/Makefile.in b/virt-top/Makefile.in
+index 5aa0c35..98e6647 100755
+--- a/virt-top/Makefile.in
++++ b/virt-top/Makefile.in
+@@ -1,5 +1,5 @@
+ # virt-top
+-# Copyright (C) 2007-2009 Red Hat Inc., Richard W.M. Jones
++# Copyright (C) 2007-2014 Red Hat Inc., Richard W.M. Jones
+ #
+ # This program is free software; you can redistribute it and/or modify
+ # it under the terms of the GNU General Public License as published by
+@@ -64,11 +64,11 @@ OBJS		+= virt_top_main.cmo
+ 
+ XOBJS		:= $(OBJS:.cmo=.cmx)
+ 
+-OCAMLCFLAGS	:= -g -warn-error A
++OCAMLCFLAGS	:= -g -warn-error A-3
+ OCAMLCLIBS	:= -linkpkg
+ 
+ OCAMLOPTPACKAGES := $(OCAMLCPACKAGES)
+-OCAMLOPTFLAGS	:= -warn-error A
++OCAMLOPTFLAGS	:= -warn-error A-3
+ OCAMLOPTLIBS	:= $(OCAMLCLIBS)
+ 
+ BYTE_TARGETS	:= virt-top
+-- 
+2.31.1
+
